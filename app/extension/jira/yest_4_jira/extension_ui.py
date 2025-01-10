@@ -121,7 +121,7 @@ def set_yest_workflow_issue_type(webdriver, issue_page):
 
 def app_yest4jira_edit(webdriver, datasets):
     page = BasePage(webdriver)
-    issue_key = datasets['issue_key']
+    issue_key = datasets['current_session']['issue_key']
     page.go_to_url(f"{JIRA_SETTINGS.server_url}/browse/{issue_key}")
     page.wait_until_visible((By.CSS_SELECTOR, '.aui-navgroup-vertical>.aui-navgroup-inner')) # Wait for repo navigation panel is visible
 
