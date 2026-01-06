@@ -1,4 +1,3 @@
-from lib2to3.pgen2 import driver
 import random
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
