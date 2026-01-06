@@ -34,12 +34,11 @@ def login(webdriver, datasets):
         BITBUCKET_SETTINGS.admin_login,
         BITBUCKET_SETTINGS.admin_password)
     webdriver.app_version = version.parse(client.get_bitbucket_version())
-    login_page = LoginPage(webdriver)
     webdriver.debug_info = generate_debug_session_info(webdriver, datasets)
+    login_page = LoginPage(webdriver)
 
     @print_timing("selenium_login")
     def measure():
-
         @print_timing("selenium_login:open_login_page")
         def sub_measure():
             login_page.go_to()
@@ -48,14 +47,17 @@ def login(webdriver, datasets):
                 login_page.go_to()
         sub_measure()
 
+        login_page.wait_for_page_loaded()
         login_page.set_credentials(datasets['current_session']['username'], datasets['current_session']['password'])
 
         @print_timing("selenium_login:login_get_started")
         def sub_measure():
             login_page.submit_login()
             get_started_page = GetStarted(webdriver)
+            get_started_page.wait_for_page_loaded()
             PopupManager(webdriver).dismiss_default_popup()
             get_started_page.close_whats_new_window()
+            PopupManager(webdriver).dismiss_default_popup()
             get_started_page.wait_for_page_loaded()
             webdriver.node_id = login_page.get_node_id()
             print(f"node_id:{webdriver.node_id}")
@@ -184,6 +186,7 @@ def comment_pull_request_diff(webdriver, datasets):
         PopupManager(webdriver).dismiss_default_popup()
         pull_request_page.dismiss_updates_info_popup()
         pull_request_page.click_inline_comment_button_js()
+        PopupManager(webdriver).dismiss_default_popup()
         pull_request_page.dismiss_updates_info_popup()
         pull_request_page.add_code_comment()
     measure()
@@ -237,12 +240,15 @@ def create_pull_request(webdriver, datasets):
             branch_from = datasets['current_session']['pull_request_branch_from']
             branch_to = datasets['current_session']['pull_request_branch_to']
             repository_branches_page.open_base_branch(base_branch_name=branch_from)
+            PopupManager(webdriver).dismiss_default_popup()
             fork_branch_from = repository_branches_page.create_branch_fork_rnd_name(base_branch_name=branch_from)
             navigation_panel.wait_for_navigation_panel()
+            PopupManager(webdriver).dismiss_default_popup()
             repository_branches_page.open_base_branch(base_branch_name=branch_to)
             fork_branch_to = repository_branches_page.create_branch_fork_rnd_name(base_branch_name=branch_to)
             datasets['pull_request_fork_branch_to'] = fork_branch_to
             navigation_panel.wait_for_navigation_panel()
+            PopupManager(webdriver).dismiss_default_popup()
             repo_pull_requests_page.create_new_pull_request(from_branch=fork_branch_from, to_branch=fork_branch_to)
             pull_request_page.dismiss_updates_info_popup()
             PopupManager(webdriver).dismiss_default_popup()

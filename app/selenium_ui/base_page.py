@@ -4,8 +4,9 @@ from collections import OrderedDict
 import time
 
 from packaging import version
-from selenium.common.exceptions import WebDriverException
+from selenium.common.exceptions import WebDriverException, TimeoutException
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.wait import WebDriverWait
@@ -78,6 +79,14 @@ class BasePage:
         return self.__wait_until(expected_condition=ec.visibility_of_element_located(selector), locator=selector,
                                  time_out=timeout)
 
+    def became_visible_in_time(self, selector, timeout):
+        try:
+            self.__wait_until(expected_condition=ec.visibility_of_element_located(selector), locator=selector,
+                                 time_out=timeout)
+            return True
+        except TimeoutException:
+            return False
+
     def wait_until_available_to_switch(self, selector):
         return self.__wait_until(expected_condition=ec.frame_to_be_available_and_switch_to_it(selector),
                                  locator=selector,
@@ -131,12 +140,16 @@ class BasePage:
 
         return WebDriverWait(self.driver, time_out).until(expected_condition, message=message)
 
-    def dismiss_popup(self, *args):
-        for elem in args:
-            try:
-                self.driver.execute_script(f"document.querySelector(\'{elem}\').click()")
-            except(WebDriverException, Exception):
-                pass
+    def dismiss_popup(self, popup_selectors):
+        for selector_type, selector_value in popup_selectors:
+            if self.driver.find_elements(by=selector_type, value=selector_value):
+                try:
+                    if selector_type == By.CSS_SELECTOR:
+                        self.driver.execute_script(f"document.querySelector('{selector_value}').click()")
+                    elif selector_type == By.XPATH:
+                        self.driver.find_element(by=selector_type, value=selector_value).click()
+                except (WebDriverException, Exception):
+                    pass
 
     def return_to_parent_frame(self):
         return self.driver.switch_to.parent_frame()
